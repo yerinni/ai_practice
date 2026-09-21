@@ -23,3 +23,15 @@ export async function insertTrip(trip: Omit<Trip, 'id' | 'created_at'>): Promise
   const { error } = await supabase.from('trips').insert(trip);
   if (error) throw error;
 }
+
+export async function getActiveTrip(userId: string): Promise<Trip | null> {
+  const { data, error } = await supabase
+    .from('trips')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return (data?.[0] as Trip | undefined) ?? null;
+}
