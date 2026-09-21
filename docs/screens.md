@@ -87,10 +87,11 @@
 - **관련 기능**: R-ACT
 - **구성**:
   - 상단 카테고리 탭: 카페 / 볼거리 / 산책로
-  - 리스트 뷰(기본) — 카드마다 사진, 이름, 거리, 저장 아이콘
+  - 리스트 뷰(기본) — 카드마다 이름, 거리, 평점, 저장 버튼
   - (선택) 지도 뷰 토글 — MVP 범위 밖이면 리스트만으로 시작
-- **액션**: 카드의 저장 아이콘 → `saved_items` insert (`item_type='place'`)
-- **데이터**: `place_cache` 우선 조회 → 캐시 없으면 Edge Function 통해 Google Places API 호출 후 캐싱
+- **액션**: 카드의 저장 버튼 → `saved_items` insert (`item_type='place'`)
+- **데이터**: `nearby-places` Edge Function 호출 → 함수 내부에서 `place_cache` 우선 조회, 없으면 Google Places API 호출 후 캐싱해서 반환
+- **구현 노트**: 카드에 사진은 넣지 않았습니다. Google Photo API는 URL 쿼리 파라미터로 키를 요구하는데, 그 URL을 그대로 앱에 내려주면 키가 노출되기 때문입니다 — 사진을 넣으려면 별도 사진 프록시 함수가 필요합니다.
 
 ---
 

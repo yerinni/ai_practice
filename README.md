@@ -42,7 +42,18 @@ Expo (React Native + TypeScript, Expo Router) + Supabase (Auth/Postgres/Edge Fun
 
    앱은 이 함수만 호출하고 스포티파이 자격 증명을 직접 다루지 않습니다 — client secret이 RN 번들 안에 들어가면 누구나 꺼내볼 수 있기 때문입니다.
 
-5. 앱 실행
+5. 구글 플레이스 Edge Function 배포 (F5/F6)
+
+   [Google Cloud Console](https://console.cloud.google.com/)에서 Places API를 켜고 API 키를 발급받은 뒤:
+
+   ```bash
+   npx supabase secrets set GOOGLE_PLACES_API_KEY=...
+   npx supabase functions deploy nearby-places
+   ```
+
+   이 함수도 서비스 role 키로 `place_cache`를 직접 읽고 쓰기 때문에, 앱은 구글 API 키를 전혀 알 필요가 없습니다.
+
+6. 앱 실행
 
    ```bash
    npx expo start
@@ -65,9 +76,12 @@ src/
   lib/mood.ts        # 시간대·취향 기반 무드 선택 로직 (순수 함수)
   lib/spotify.ts     # spotify-mood-playlist Edge Function 호출
   lib/mood-recommendations.ts # mood_recommendations 기록
-  lib/saved-items.ts # saved_items 저장
+  lib/saved-items.ts # saved_items 저장·조회·삭제
+  lib/places.ts       # nearby-places Edge Function 호출 + 거리 계산
   types/database.ts # docs/db-schema.md와 동기화되는 테이블 타입 (수동 작성 — 아직 Supabase 프로젝트에 스키마를 올리기 전이라 `supabase gen types`를 쓰지 않았습니다)
-supabase/functions/spotify-mood-playlist/ # 스포티파이 Client Credentials 교환 + 검색 (Deno)
+supabase/functions/
+  spotify-mood-playlist/ # 스포티파이 Client Credentials 교환 + 검색 (Deno)
+  nearby-places/          # 구글 플레이스 검색 + place_cache 읽기/쓰기 (Deno)
 ```
 
 각 화면 파일 상단 주석에 어떤 PRD 기능(F1~F8)과 연결되는지, 아직 붙이지 않은 실제 데이터/API 연동이 무엇인지 TODO로 남겨두었습니다.
@@ -78,5 +92,11 @@ supabase/functions/spotify-mood-playlist/ # 스포티파이 Client Credentials �
 
 - ✅ F1, F2 — 이메일/비밀번호 로그인, 첫 여행 체크, 여행 정보 입력까지 Supabase 연동 완료. 소셜 로그인과 날짜 range picker는 `docs/screens.md`에 적어둔 이유로 보류 중.
 - ✅ F3, F4 — 위치+시간대+취향 기반 무드 추천, "다른 느낌으로", 재생/저장까지 연동. 스포티파이는 사용자 로그인 없이 Client Credentials로 시작(설정 화면의 "연동"은 아직 미구현) — 사용자 계정 연동은 F3/F4 후속 작업.
-- ⬜ F5, F6 — 구글 플레이스 연동 활동 추천
+- ✅ F5, F6 — 카페/볼거리/산책로 탭, 거리 표시, 저장/삭제까지 연동. 사진은 의도적으로 뺐습니다 — Google Photo API가 키를 쿼리 파라미터로 요구해서, 그대로 URL을 앱에 내려주면 키가 노출됩니다. 별도 사진 프록시 함수가 필요해서 후속 작업으로 남겨뒀습니다.
 - ⬜ F7, F8 — 화면은 있지만 콘텐츠는 Supabase 테이블에서 읽어오는 정도까지만 (관리자 콘텐츠 입력 도구는 없음)
+
+## 검증하지 못한 부분
+
+이 세션의 네트워크 정책상 `docs.expo.dev`, `developers.google.com` 등 외부 문서 사이트에 접근할 수 없었습니다. 그래서:
+- `expo-location` API는 `node_modules`에 설치된 실제 타입 선언을 직접 읽어 확인했습니다 (문서 대신 소스로 검증).
+- 구글 플레이스는 레거시 Nearby Search 엔드포인트(`.../place/nearbysearch/json`)를 그대로 사용했는데, 최신 Places API(New)로 전환됐는지 재확인하지 못했습니다. 실제 배포 전에 구글 공식 문서에서 한 번 더 확인해주세요.
