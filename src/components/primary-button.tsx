@@ -7,15 +7,18 @@ export function PrimaryButton({
   label,
   onPress,
   variant = 'solid',
+  disabled = false,
 }: {
   label: string;
   onPress: () => void;
   variant?: 'solid' | 'outline';
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.button, variant === 'outline' && styles.outline]}>
+      disabled={disabled}
+      style={[styles.button, variant === 'outline' && styles.outline, disabled && styles.disabled]}>
       <ThemedText type="smallBold" themeColor={variant === 'solid' ? undefined : 'text'} style={variant === 'solid' && styles.solidLabel}>
         {label}
       </ThemedText>
@@ -34,6 +37,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: '#3c87f7',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   solidLabel: {
     color: '#ffffff',

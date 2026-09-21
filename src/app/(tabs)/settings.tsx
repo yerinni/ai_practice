@@ -5,11 +5,17 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 
 // docs/screens.md #9: profile edit, Spotify connect/disconnect, music taste,
 // safety checklist recall, logout. Each row is a stub until its owning
-// feature (F1, F3/F4, F8) is implemented.
+// feature (F1, F3/F4) is implemented.
 export default function SettingsScreen() {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace('/(onboarding)/login');
+  };
+
   return (
     <ScreenContainer>
       <ThemedText type="title">설정</ThemedText>
@@ -24,7 +30,7 @@ export default function SettingsScreen() {
         variant="outline"
         onPress={() => router.push('/(onboarding)/safety-checklist')}
       />
-      <PrimaryButton label="로그아웃" variant="outline" onPress={() => router.replace('/(onboarding)/login')} />
+      <PrimaryButton label="로그아웃" variant="outline" onPress={handleLogout} />
     </ScreenContainer>
   );
 }

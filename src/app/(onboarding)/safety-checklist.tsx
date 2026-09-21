@@ -1,38 +1,74 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useSession } from '@/hooks/use-session';
+import { updateProfile } from '@/lib/profile';
+import { supabase } from '@/lib/supabase';
+import type { SafetyChecklistItem } from '@/types/database';
 
-// F8: minimal safety checklist for first-timers, loaded from
+// F8: minimal safety checklist for first-timers, from
 // `safety_checklist_items` (active=true, ordered by sort_order). Repeat
-// travelers never reach this screen (see first-trip-check.tsx branch).
-const PLACEHOLDER_ITEMS = [
-  '숙소·일정을 지인에게 공유해두기',
-  '늦은 밤엔 공공장소·번화가 위주로 이동하기',
-  '현지 긴급 연락처 미리 저장해두기',
-];
-
+// travelers never reach this screen (see trip-setup.tsx branch).
 export default function SafetyChecklistScreen() {
-  const handleDone = () => {
-    // TODO(F8): persist `profiles.onboarding_completed_at = now()` via Supabase.
-    router.replace('/(tabs)');
+  const { session } = useSession();
+  const [items, setItems] = useState<SafetyChecklistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('safety_checklist_items')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        setItems((data as SafetyChecklistItem[] | null) ?? []);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleDone = async () => {
+    if (!session) {
+      router.replace('/(onboarding)/login');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await updateProfile(session.user.id, { onboarding_completed_at: new Date().toISOString() });
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('저장에 실패했어요', error instanceof Error ? error.message : String(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <ScreenContainer>
       <ThemedText type="title">여행 전 꼭 확인하세요</ThemedText>
-      <ScrollView contentContainerStyle={styles.list}>
-        {PLACEHOLDER_ITEMS.map((item) => (
-          <ThemedText key={item} type="default">
-            •  {item}
-          </ThemedText>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator />
+      ) : (
+        <ScrollView contentContainerStyle={styles.list}>
+          {items.map((item) => (
+            <View key={item.id}>
+              <ThemedText type="default">•  {item.title}</ThemedText>
+              {item.description ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {item.description}
+                </ThemedText>
+              ) : null}
+            </View>
+          ))}
+        </ScrollView>
+      )}
       <View>
-        <PrimaryButton label="확인했어요" onPress={handleDone} />
+        <PrimaryButton label="확인했어요" onPress={handleDone} disabled={submitting} />
       </View>
     </ScreenContainer>
   );

@@ -93,45 +93,7 @@ export interface AppEvent {
   created_at: string;
 }
 
-// Minimal Supabase Database generic so `createClient<Database>()` gets basic type safety
-// without hand-writing the full generated-types shape. Replace with `supabase gen types`
-// output once the schema is applied to a real project.
-export interface Database {
-  public: {
-    Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile> & { id: string }; Update: Partial<Profile> };
-      trips: { Row: Trip; Insert: Omit<Trip, 'id' | 'created_at'> & Partial<Pick<Trip, 'id'>>; Update: Partial<Trip> };
-      spotify_connections: {
-        Row: SpotifyConnection;
-        Insert: SpotifyConnection;
-        Update: Partial<SpotifyConnection>;
-      };
-      mood_recommendations: {
-        Row: MoodRecommendation;
-        Insert: Omit<MoodRecommendation, 'id' | 'created_at'> & Partial<Pick<MoodRecommendation, 'id'>>;
-        Update: Partial<MoodRecommendation>;
-      };
-      place_cache: {
-        Row: PlaceCache;
-        Insert: Omit<PlaceCache, 'id'> & Partial<Pick<PlaceCache, 'id'>>;
-        Update: Partial<PlaceCache>;
-      };
-      saved_items: {
-        Row: SavedItem;
-        Insert: Omit<SavedItem, 'id' | 'saved_at'> & Partial<Pick<SavedItem, 'id'>>;
-        Update: Partial<SavedItem>;
-      };
-      testimonials: { Row: Testimonial; Insert: Partial<Testimonial>; Update: Partial<Testimonial> };
-      safety_checklist_items: {
-        Row: SafetyChecklistItem;
-        Insert: Partial<SafetyChecklistItem>;
-        Update: Partial<SafetyChecklistItem>;
-      };
-      events: {
-        Row: AppEvent;
-        Insert: Omit<AppEvent, 'id' | 'created_at'> & Partial<Pick<AppEvent, 'id'>>;
-        Update: Partial<AppEvent>;
-      };
-    };
-  };
-}
+// These interfaces are hand-written from docs/db-schema.md for use with
+// `.returns<T>()` at each call site (see src/lib/supabase.ts for why the
+// client itself isn't given a `Database` generic). Replace with `supabase
+// gen types` output once the schema is applied to a real project.
