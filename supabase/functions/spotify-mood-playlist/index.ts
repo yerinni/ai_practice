@@ -2,18 +2,23 @@
 //   supabase functions deploy spotify-mood-playlist
 //   supabase secrets set SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=...
 //
-// F3/F4: given a mood tag, returns one Spotify playlist. Uses the Client
+// F3/F4: given a mood tag, returns one Spotify track. Uses the Client
 // Credentials grant (app-level, no per-user Spotify login for MVP) — the
 // client secret is exchanged here, server-side, so it never ships inside
 // the React Native bundle where anyone could extract it.
+//
+// Searches tracks, not playlists: Spotify restricted playlist search
+// results for apps in Development Mode as part of its Nov 2024 API
+// changes, which made `type=playlist` return 403 for this app. Track
+// search isn't affected by that restriction.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Korean UI mood tags -> English search keywords. Spotify's playlist search
-// mostly indexes English-language titles, so translating the query gets far
+// Korean UI mood tags -> English search keywords. Spotify's search mostly
+// indexes English-language metadata, so translating the query gets far
 // more relevant hits than searching the Korean word directly.
 const MOOD_SEARCH_TERMS: Record<string, string> = {
   차분한: 'calm chill',
@@ -63,8 +68,8 @@ Deno.serve(async (req) => {
     const query = MOOD_SEARCH_TERMS[mood] ?? mood;
     const searchUrl = new URL('https://api.spotify.com/v1/search');
     searchUrl.searchParams.set('q', query);
-    searchUrl.searchParams.set('type', 'playlist');
-    searchUrl.searchParams.set('limit', '10');
+    searchUrl.searchParams.set('type', 'track');
+    searchUrl.searchParams.set('limit', '20');
 
     const searchResponse = await fetch(searchUrl, {
       headers: { Authorization: `Bearer ${token}` },
@@ -73,27 +78,29 @@ Deno.serve(async (req) => {
       throw new Error(`Spotify search failed: ${searchResponse.status}`);
     }
     const searchData = await searchResponse.json();
-    const items = ((searchData.playlists?.items ?? []) as unknown[]).filter(Boolean) as Array<{
+    const items = ((searchData.tracks?.items ?? []) as unknown[]).filter(Boolean) as Array<{
       id: string;
       name: string;
-      images?: { url: string }[];
+      artists?: { name: string }[];
+      album?: { images?: { url: string }[] };
       external_urls?: { spotify?: string };
     }>;
 
     if (items.length === 0) {
-      return new Response(JSON.stringify({ error: 'no playlist found' }), {
+      return new Response(JSON.stringify({ error: 'no track found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const playlist = items[Math.floor(Math.random() * items.length)];
+    const track = items[Math.floor(Math.random() * items.length)];
+    const artistNames = (track.artists ?? []).map((artist) => artist.name).join(', ');
     return new Response(
       JSON.stringify({
-        id: playlist.id,
-        name: playlist.name,
-        imageUrl: playlist.images?.[0]?.url ?? null,
-        externalUrl: playlist.external_urls?.spotify ?? null,
+        id: track.id,
+        name: artistNames ? `${track.name} - ${artistNames}` : track.name,
+        imageUrl: track.album?.images?.[0]?.url ?? null,
+        externalUrl: track.external_urls?.spotify ?? null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
