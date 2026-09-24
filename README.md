@@ -7,7 +7,7 @@
 
 ## 기술 스택
 
-Expo (React Native + TypeScript, Expo Router) + Supabase (Auth/Postgres/Edge Functions) + Spotify Web API + Google Places API.
+Expo (React Native + TypeScript, Expo Router) + Supabase (Auth/Postgres/Edge Functions) + Deezer API (음악) + Google Places API (활동).
 
 ## 시작하기
 
@@ -29,18 +29,17 @@ Expo (React Native + TypeScript, Expo Router) + Supabase (Auth/Postgres/Edge Fun
 
    `docs/db-schema.md`의 SQL을 Supabase 프로젝트 SQL editor에서 실행하세요. `testimonials`/`safety_checklist_items`에 최소 1개 이상 행을 넣어야 온보딩 화면에 내용이 보입니다.
 
-4. 스포티파이 Edge Function 배포 (F3/F4)
+4. 음악 추천 Edge Function 배포 (F3/F4)
 
-   `supabase/functions/spotify-mood-playlist`가 무드 추천을 실제로 가져오는 부분입니다. [스포티파이 개발자 대시보드](https://developer.spotify.com/dashboard)에서 앱을 만들어 client id/secret을 발급받은 뒤:
+   `supabase/functions/mood-track`이 무드 추천을 실제로 가져오는 부분입니다. [Deezer](https://www.deezer.com) 공개 검색 API를 쓰는데, **API 키나 계정이 전혀 필요 없습니다**:
 
    ```bash
    npx supabase login
    npx supabase link --project-ref <your-project-ref>
-   npx supabase secrets set SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=...
-   npx supabase functions deploy spotify-mood-playlist
+   npx supabase functions deploy mood-track
    ```
 
-   앱은 이 함수만 호출하고 스포티파이 자격 증명을 직접 다루지 않습니다 — client secret이 RN 번들 안에 들어가면 누구나 꺼내볼 수 있기 때문입니다.
+   (처음엔 스포티파이 Web API로 만들었는데, 검색처럼 기본적인 호출도 개발자 계정에 Premium 구독이 있어야 되게 정책이 바뀌어서 Deezer로 교체했습니다.)
 
 5. 구글 플레이스 Edge Function 배포 (F5/F6)
 
@@ -74,14 +73,14 @@ src/
   lib/supabase.ts   # Supabase 클라이언트
   lib/profile.ts    # profiles/trips 읽기·쓰기 헬퍼
   lib/mood.ts        # 시간대·취향 기반 무드 선택 로직 (순수 함수)
-  lib/spotify.ts     # spotify-mood-playlist Edge Function 호출
+  lib/music.ts       # mood-track Edge Function 호출
   lib/mood-recommendations.ts # mood_recommendations 기록
   lib/saved-items.ts # saved_items 저장·조회·삭제
   lib/places.ts       # nearby-places Edge Function 호출 + 거리 계산
   types/database.ts # docs/db-schema.md와 동기화되는 테이블 타입 (수동 작성 — 아직 Supabase 프로젝트에 스키마를 올리기 전이라 `supabase gen types`를 쓰지 않았습니다)
 supabase/functions/
-  spotify-mood-playlist/ # 스포티파이 Client Credentials 교환 + 검색 (Deno)
-  nearby-places/          # 구글 플레이스 검색 + place_cache 읽기/쓰기 (Deno)
+  mood-track/    # Deezer 검색 (Deno, API 키 불필요)
+  nearby-places/ # 구글 플레이스 검색 + place_cache 읽기/쓰기 (Deno)
 ```
 
 각 화면 파일 상단 주석에 어떤 PRD 기능(F1~F8)과 연결되는지, 아직 붙이지 않은 실제 데이터/API 연동이 무엇인지 TODO로 남겨두었습니다.
@@ -91,12 +90,13 @@ supabase/functions/
 ## 진행 상황
 
 - ✅ F1, F2 — 이메일/비밀번호 로그인, 첫 여행 체크, 여행 정보 입력까지 Supabase 연동 완료. 소셜 로그인과 날짜 range picker는 `docs/screens.md`에 적어둔 이유로 보류 중.
-- ✅ F3, F4 — 위치+시간대+취향 기반 무드 추천, "다른 느낌으로", 재생/저장까지 연동. 스포티파이는 사용자 로그인 없이 Client Credentials로 시작(설정 화면의 "연동"은 아직 미구현) — 사용자 계정 연동은 F3/F4 후속 작업.
+- ✅ F3, F4 — 위치+시간대+취향 기반 무드 추천, "다른 느낌으로", 재생/저장까지 연동. 음악 소스는 스포티파이 대신 **Deezer**(API 키/구독 불필요) 사용 — 이유는 아래 "검증하지 못한 부분" 참고.
 - ✅ F5, F6 — 카페/볼거리/산책로 탭, 거리 표시, 저장/삭제까지 연동. 사진은 의도적으로 뺐습니다 — Google Photo API가 키를 쿼리 파라미터로 요구해서, 그대로 URL을 앱에 내려주면 키가 노출됩니다. 별도 사진 프록시 함수가 필요해서 후속 작업으로 남겨뒀습니다.
 - ⬜ F7, F8 — 화면은 있지만 콘텐츠는 Supabase 테이블에서 읽어오는 정도까지만 (관리자 콘텐츠 입력 도구는 없음)
 
 ## 검증하지 못한 부분
 
-이 세션의 네트워크 정책상 `docs.expo.dev`, `developers.google.com` 등 외부 문서 사이트에 접근할 수 없었습니다. 그래서:
+이 세션의 네트워크 정책상 `docs.expo.dev`, `developers.google.com`, `developer.spotify.com`, `developers.deezer.com` 등 외부 문서/API 사이트에 접근할 수 없었습니다. 그래서:
 - `expo-location` API는 `node_modules`에 설치된 실제 타입 선언을 직접 읽어 확인했습니다 (문서 대신 소스로 검증).
 - 구글 플레이스는 레거시 Nearby Search 엔드포인트(`.../place/nearbysearch/json`)를 그대로 사용했는데, 최신 Places API(New)로 전환됐는지 재확인하지 못했습니다. 실제 배포 전에 구글 공식 문서에서 한 번 더 확인해주세요.
+- 스포티파이 Web API를 처음 썼는데, 실제 배포해서 테스트해보니 검색(`/v1/search`)까지 전부 403으로 막혔습니다 — 개발자 계정에 Premium 구독이 있어야 Web API를 쓸 수 있도록 정책이 바뀐 것으로 보입니다(사용자분이 스포티파이 대시보드에서 직접 확인). 이 세션에서 `developer.spotify.com` 접근이 막혀 있어 공식 문서로 재확인은 못 했습니다. 그래서 API 키가 전혀 필요 없는 **Deezer**의 공개 검색 API로 교체했습니다 — 다만 이것도 실시간 문서 확인 없이 기존 지식으로 작성한 것이라, 실제 Supabase에 배포해서 Test 기능으로 꼭 확인해주세요.

@@ -78,7 +78,7 @@
   - 저장 아이콘(♥) — 누르면 `saved_items`에 저장
 - **로딩 상태**: 위치 권한 요청 → 최초 1회만, 이후는 백그라운드에서 재요청
 - **빈 상태/에러**: 위치 권한 거부 시 도시 이름 수동 입력으로 대체 추천
-- **구현 노트**: 스포티파이는 `supabase/functions/spotify-mood-playlist` Edge Function을 통해 Client Credentials로 호출 (사용자 로그인 없이 앱 단위 토큰). 도시 이름 수동 입력 대체 추천 대신, 위치 권한 거부 시에는 시간대 기준으로만 무드를 고른다 — 수동 입력 UI는 아직 없음.
+- **구현 노트**: 음악 소스는 스포티파이가 아니라 **Deezer**를 쓴다 (`supabase/functions/mood-track` Edge Function). 스포티파이 Web API로 먼저 만들었는데, 실제 배포해보니 검색 요청까지 전부 403으로 막혔다 — 개발자 계정에 Premium 구독이 있어야 Web API를 쓸 수 있도록 정책이 바뀐 것으로 보인다. Deezer는 API 키/구독 없이 공개 검색을 쓸 수 있어서 교체했다. 도시 이름 수동 입력 대체 추천 대신, 위치 권한 거부 시에는 시간대 기준으로만 무드를 고른다 — 수동 입력 UI는 아직 없음.
 
 ---
 
@@ -99,7 +99,7 @@
 
 - **구성**:
   - 상단 필터: 전체 / 음악 / 장소, 여행(trip)별 필터
-  - 리스트: `saved_items`를 `saved_at desc`로 표시, 항목 탭 시 상세(음악이면 스포티파이로 열기, 장소면 지도 앱 연결)
+  - 리스트: `saved_items`를 `saved_at desc`로 표시, 항목 탭 시 상세(음악이면 Deezer로 열기, 장소면 지도 앱 연결)
   - 스와이프로 삭제 가능
 - **빈 상태**: "아직 저장한 게 없어요" + 홈/주변 활동으로 이동 유도 문구
 
@@ -109,8 +109,7 @@
 
 - **구성**:
   - 프로필 정보 (닉네임, 현재 여행 정보 수정)
-  - 스포티파이 연동 상태 (연결/해제)
-  - 음악 취향 재설정
+  - 음악 취향 재설정 (Deezer 공개 검색만 쓰므로 계정 연동 개념 자체가 없어짐 — `spotify_connections` 테이블은 스포티파이 쓰던 시절 설계라 지금은 미사용)
   - 안전 체크리스트 다시 보기 (F8 — 반복 사용자도 원하면 다시 볼 수 있게)
   - 로그아웃
 
@@ -125,10 +124,10 @@
 | TripSetup | trips | - |
 | Testimonials | testimonials | - |
 | SafetyChecklist | safety_checklist_items, profiles | - |
-| 홈(지금 이 순간) | mood_recommendations, saved_items | Spotify Web API, 위치(Expo Location) |
+| 홈(지금 이 순간) | mood_recommendations, saved_items | Deezer API, 위치(Expo Location) |
 | 주변 활동 | place_cache, saved_items | Google Places API |
 | 저장함 | saved_items | - |
-| 설정 | profiles, trips, spotify_connections | Spotify OAuth |
+| 설정 | profiles, trips | - |
 
 ## 미해결 이슈
 - 지도 뷰 포함 여부는 MVP 범위(F5)에서 제외하고 리스트로 시작, 사용자 반응 보고 추가 검토.

@@ -10,15 +10,16 @@ import { useLocation } from '@/hooks/use-location';
 import { useSession } from '@/hooks/use-session';
 import { insertMoodRecommendation, updateMoodRecommendationAction } from '@/lib/mood-recommendations';
 import { getTimeOfDay, pickMoodTag, timeOfDayLabel, type TimeOfDay } from '@/lib/mood';
+import { fetchMoodTrack, type MoodTrack } from '@/lib/music';
 import { getActiveTrip } from '@/lib/profile';
 import { saveItem } from '@/lib/saved-items';
-import { fetchMoodPlaylist, type MoodPlaylist } from '@/lib/spotify';
 
-// R-MOOD core screen (F3/F4, docs/screens.md #6): suggests one playlist with
+// R-MOOD core screen (F3/F4, docs/screens.md #6): suggests one track with
 // no questions asked, and lets the traveler swap it or save it. See
 // src/lib/mood.ts for the time-of-day/mood-preference picking logic and
-// supabase/functions/spotify-mood-playlist for where the actual Spotify call
-// happens (kept server-side so the client secret never ships in the app).
+// supabase/functions/mood-track for where the actual search happens
+// (Deezer, called server-side to keep this consistent with the other
+// integrations even though it needs no secret).
 export default function HomeScreen() {
   const { session } = useSession();
   const location = useLocation();
@@ -30,7 +31,7 @@ export default function HomeScreen() {
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [moodTag, setMoodTag] = useState<string | null>(null);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null);
-  const [playlist, setPlaylist] = useState<MoodPlaylist | null>(null);
+  const [track, setTrack] = useState<MoodTrack | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function HomeScreen() {
   }, [session]);
 
   useEffect(() => {
-    if (!session || !tripLoaded || location.status === 'loading' || playlist) return;
+    if (!session || !tripLoaded || location.status === 'loading' || track) return;
     loadRecommendation();
     // Only fires once, when the trip + location are both known — a fresh
     // `loadRecommendation` identity every render would loop this effect.
@@ -56,7 +57,7 @@ export default function HomeScreen() {
     try {
       const nextTimeOfDay = getTimeOfDay();
       const mood = pickMoodTag({ timeOfDay: nextTimeOfDay, tripMoodPreferences, exclude: excludeMood });
-      const nextPlaylist = await fetchMoodPlaylist(mood);
+      const nextTrack = await fetchMoodTrack(mood);
       const coords = location.status === 'granted' ? location.coords : null;
       const id = await insertMoodRecommendation({
         userId: session.user.id,
@@ -65,11 +66,11 @@ export default function HomeScreen() {
         longitude: coords?.longitude ?? null,
         timeOfDay: nextTimeOfDay,
         moodTag: mood,
-        spotifyPlaylistId: nextPlaylist.id,
+        spotifyPlaylistId: nextTrack.id,
       });
       setTimeOfDay(nextTimeOfDay);
       setMoodTag(mood);
-      setPlaylist(nextPlaylist);
+      setTrack(nextTrack);
       setRecommendationId(id);
     } catch (error) {
       Alert.alert('추천을 불러오지 못했어요', error instanceof Error ? error.message : String(error));
@@ -86,24 +87,25 @@ export default function HomeScreen() {
   };
 
   const handlePlay = () => {
-    if (!playlist?.externalUrl) return;
+    const url = track?.previewUrl ?? track?.externalUrl;
+    if (!url) return;
     if (recommendationId) {
       updateMoodRecommendationAction(recommendationId, 'played').catch(() => {});
     }
-    Linking.openURL(playlist.externalUrl);
+    Linking.openURL(url);
   };
 
   const handleSave = async () => {
-    if (!session || !playlist) return;
+    if (!session || !track) return;
     try {
       await saveItem({
         user_id: session.user.id,
         trip_id: tripId,
         item_type: 'music',
-        reference_id: playlist.id,
-        title: playlist.name,
-        image_url: playlist.imageUrl,
-        metadata: { externalUrl: playlist.externalUrl },
+        reference_id: track.id,
+        title: track.name,
+        image_url: track.imageUrl,
+        metadata: { externalUrl: track.externalUrl },
       });
       Alert.alert('저장했어요');
     } catch (error) {
@@ -114,13 +116,13 @@ export default function HomeScreen() {
   return (
     <ScreenContainer>
       <ThemedText type="title">지금 이 순간</ThemedText>
-      {loading || !playlist || !timeOfDay ? (
+      {loading || !track || !timeOfDay ? (
         <ActivityIndicator />
       ) : (
         <>
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="subtitle">{timeOfDayLabel(timeOfDay)}</ThemedText>
-            <ThemedText type="default">{playlist.name}</ThemedText>
+            <ThemedText type="default">{track.name}</ThemedText>
             {location.status === 'denied' ? (
               <ThemedText type="small" themeColor="textSecondary">
                 위치 권한이 없어 시간대 기준으로만 추천했어요.
