@@ -18,6 +18,11 @@ export default function SettingsScreen() {
     <ScreenContainer>
       <ThemedText type="title">설정</ThemedText>
       <PrimaryButton
+        label="음악 취향 수정"
+        variant="outline"
+        onPress={() => router.push('/music-preferences')}
+      />
+      <PrimaryButton
         label="안전 체크리스트 다시 보기"
         variant="outline"
         onPress={() => router.push('/(onboarding)/safety-checklist')}

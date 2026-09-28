@@ -7,13 +7,10 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { GENRE_OPTIONS, MAX_SELECTION, MOOD_OPTIONS } from '@/constants/music-taste';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { insertTrip, updateProfile } from '@/lib/profile';
-
-const GENRE_OPTIONS = ['인디', '팝', '재즈', '로파이', 'K-POP', '어쿠스틱'];
-const MOOD_OPTIONS = ['차분한', '신나는', '몽환적인', '센치한', '경쾌한'];
-const MAX_SELECTION = 3;
 
 // F1: minimal trip profile — destination, dates, music taste. Kept to a
 // single screen on purpose (see PRD "결정 피로 최소화"). Trip length is a

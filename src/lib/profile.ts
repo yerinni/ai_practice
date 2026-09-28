@@ -24,6 +24,11 @@ export async function insertTrip(trip: Omit<Trip, 'id' | 'created_at'>): Promise
   if (error) throw error;
 }
 
+export async function updateTrip(tripId: string, patch: Partial<Trip>): Promise<void> {
+  const { error } = await supabase.from('trips').update(patch).eq('id', tripId);
+  if (error) throw error;
+}
+
 export async function getActiveTrip(userId: string): Promise<Trip | null> {
   const { data, error } = await supabase
     .from('trips')
