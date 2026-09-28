@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/primary-button';
@@ -41,15 +42,23 @@ export default function HomeScreen() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!session) return;
-    getActiveTrip(session.user.id).then((trip) => {
-      setTripId(trip?.id ?? null);
-      setTripMoodPreferences(trip?.mood_preferences ?? []);
-      setTripMusicGenres(trip?.music_genres ?? []);
-      setTripLoaded(true);
-    });
-  }, [session]);
+  // useFocusEffect (not plain useEffect): the tabs navigator keeps this
+  // screen mounted when you switch tabs, so a mount-only effect would never
+  // notice that Settings → 음악 취향 수정 changed the trip's genres/moods.
+  // Refetching on every focus means the next "다른 느낌으로" press picks up
+  // the edit instead of using the stale values from when the tab first
+  // mounted.
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) return;
+      getActiveTrip(session.user.id).then((trip) => {
+        setTripId(trip?.id ?? null);
+        setTripMoodPreferences(trip?.mood_preferences ?? []);
+        setTripMusicGenres(trip?.music_genres ?? []);
+        setTripLoaded(true);
+      });
+    }, [session]),
+  );
 
   useEffect(() => {
     if (!session || !tripLoaded || location.status === 'loading' || recommendations.length > 0) return;
