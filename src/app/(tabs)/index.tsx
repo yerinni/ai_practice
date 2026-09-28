@@ -67,7 +67,7 @@ export default function HomeScreen() {
       const moods = pickMoodTags({ timeOfDay: nextTimeOfDay, tripMoodPreferences }, CARD_COUNT);
       const coords = location.status === 'granted' ? location.coords : null;
 
-      const next = await Promise.all(
+      const settled = await Promise.allSettled(
         moods.map(async (mood, index) => {
           // Cycle through the traveler's chosen genres (trip-setup.tsx) so
           // each of the 3 cards reflects a genre they actually picked,
@@ -86,6 +86,15 @@ export default function HomeScreen() {
           return { recommendationId, moodTag: mood, track };
         }),
       );
+
+      // One mood/genre combo failing to find a track (rare, but Deezer's
+      // free-text search can come up empty for an unusual combo) shouldn't
+      // blank out the other cards that did work.
+      const next = settled.filter((result) => result.status === 'fulfilled').map((result) => result.value);
+      if (next.length === 0) {
+        const firstError = settled.find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
+        throw firstError?.reason ?? new Error('추천을 하나도 받지 못했어요.');
+      }
 
       setTimeOfDay(nextTimeOfDay);
       setRecommendations(next);

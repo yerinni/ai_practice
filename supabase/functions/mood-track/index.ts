@@ -44,6 +44,31 @@ const GENRE_SEARCH_TERMS: Record<string, string> = {
   클래식: 'classical',
 };
 
+interface DeezerTrack {
+  id: number;
+  title: string;
+  link?: string;
+  preview?: string;
+  artist?: { name: string };
+  album?: { cover_medium?: string };
+}
+
+async function searchDeezer(query: string): Promise<DeezerTrack[]> {
+  const searchUrl = new URL('https://api.deezer.com/search');
+  searchUrl.searchParams.set('q', query);
+  searchUrl.searchParams.set('limit', '25');
+
+  const response = await fetch(searchUrl);
+  if (!response.ok) {
+    throw new Error(`Deezer search failed: ${response.status}`);
+  }
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(`Deezer error: ${data.error.message ?? data.error.type}`);
+  }
+  return ((data.data ?? []) as unknown[]).filter(Boolean) as DeezerTrack[];
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -60,29 +85,15 @@ Deno.serve(async (req) => {
 
     const moodTerm = MOOD_SEARCH_TERMS[mood] ?? mood;
     const genreTerm = typeof genre === 'string' ? (GENRE_SEARCH_TERMS[genre] ?? genre) : null;
-    const query = [genreTerm, moodTerm].filter(Boolean).join(' ');
 
-    const searchUrl = new URL('https://api.deezer.com/search');
-    searchUrl.searchParams.set('q', query);
-    searchUrl.searchParams.set('limit', '25');
-
-    const searchResponse = await fetch(searchUrl);
-    if (!searchResponse.ok) {
-      throw new Error(`Deezer search failed: ${searchResponse.status}`);
+    // A genre+mood combo (e.g. "classical" + "epic cinematic") can come up
+    // empty even though each term alone has plenty of results, since this
+    // is free-text search, not faceted filtering. Fall back to mood-only
+    // rather than failing the whole card.
+    let items = await searchDeezer([genreTerm, moodTerm].filter(Boolean).join(' '));
+    if (items.length === 0 && genreTerm) {
+      items = await searchDeezer(moodTerm);
     }
-    const searchData = await searchResponse.json();
-    if (searchData.error) {
-      throw new Error(`Deezer error: ${searchData.error.message ?? searchData.error.type}`);
-    }
-
-    const items = ((searchData.data ?? []) as unknown[]).filter(Boolean) as Array<{
-      id: number;
-      title: string;
-      link?: string;
-      preview?: string;
-      artist?: { name: string };
-      album?: { cover_medium?: string };
-    }>;
 
     if (items.length === 0) {
       return new Response(JSON.stringify({ error: 'no track found' }), {
