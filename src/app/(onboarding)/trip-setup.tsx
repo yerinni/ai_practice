@@ -6,8 +6,8 @@ import { ChipSelect } from '@/components/chip-select';
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
 import { GENRE_OPTIONS, MAX_SELECTION, MOOD_OPTIONS } from '@/constants/music-taste';
+import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { insertTrip, updateProfile } from '@/lib/profile';
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: Radius.medium,
     padding: Spacing.three,
     fontSize: 16,
   },

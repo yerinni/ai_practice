@@ -4,6 +4,7 @@
 
 - DB 스키마: [`docs/db-schema.md`](docs/db-schema.md)
 - 화면 설계: [`docs/screens.md`](docs/screens.md)
+- 디자인 시스템(색상·타이포그래피·간격·컴포넌트 규칙): [`docs/design-system.md`](docs/design-system.md)
 
 ## 기술 스택
 

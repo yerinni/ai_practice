@@ -6,7 +6,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useLocation } from '@/hooks/use-location';
 import { useSession } from '@/hooks/use-session';
 import { insertMoodRecommendation, updateMoodRecommendationAction } from '@/lib/mood-recommendations';
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.three,
   },
   card: {
-    borderRadius: 20,
+    borderRadius: Radius.xlarge,
     padding: Spacing.four,
     gap: Spacing.three,
   },

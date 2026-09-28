@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export function ChipSelect({
@@ -35,10 +35,12 @@ export function ChipSelect({
             onPress={() => toggle(option)}
             style={[
               styles.chip,
-              { borderColor: theme.backgroundSelected },
-              isSelected && { backgroundColor: theme.backgroundSelected },
+              { borderColor: isSelected ? theme.accent : theme.backgroundSelected },
+              isSelected && { backgroundColor: theme.accent },
             ]}>
-            <ThemedText type="small">{option}</ThemedText>
+            <ThemedText type="small" themeColor={isSelected ? 'accentText' : 'text'}>
+              {option}
+            </ThemedText>
           </Pressable>
         );
       })}
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: Radius.pill,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
   },

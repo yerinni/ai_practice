@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, View } from 
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useLocation } from '@/hooks/use-location';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
@@ -75,10 +75,12 @@ export default function NearbyScreen() {
               onPress={() => setCategory(item.key)}
               style={[
                 styles.tab,
-                { borderColor: theme.backgroundSelected },
-                isActive && { backgroundColor: theme.backgroundSelected },
+                { borderColor: isActive ? theme.accent : theme.backgroundSelected },
+                isActive && { backgroundColor: theme.accent },
               ]}>
-              <ThemedText type="small">{item.label}</ThemedText>
+              <ThemedText type="small" themeColor={isActive ? 'accentText' : 'text'}>
+                {item.label}
+              </ThemedText>
             </Pressable>
           );
         })}
@@ -115,7 +117,7 @@ export default function NearbyScreen() {
                   {[distance, item.address, item.rating ? `★ ${item.rating}` : null].filter(Boolean).join(' · ')}
                 </ThemedText>
                 <Pressable onPress={() => handleSave(item)} disabled={isSaved}>
-                  <ThemedText type="link" themeColor={isSaved ? 'textSecondary' : undefined}>
+                  <ThemedText type="link" themeColor={isSaved ? 'textSecondary' : 'accent'}>
                     {isSaved ? '저장됨' : '저장하기'}
                   </ThemedText>
                 </Pressable>
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: Radius.pill,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
   },
@@ -144,7 +146,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: Radius.large,
     padding: Spacing.three,
     gap: Spacing.one,
   },

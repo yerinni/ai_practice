@@ -5,7 +5,7 @@ import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ensureProfile, getProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: Radius.medium,
     padding: Spacing.three,
     fontSize: 16,
   },

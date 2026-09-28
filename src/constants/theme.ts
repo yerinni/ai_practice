@@ -1,6 +1,7 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens — see docs/design-system.md for the full style guide
+ * (palette rationale, typography scale, component rules). Update both
+ * together so the doc never drifts from what the code actually uses.
  */
 
 import '@/global.css';
@@ -9,18 +10,22 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#3A2B1E',
+    textSecondary: '#8A7360',
+    background: '#FBF5EC',
+    backgroundElement: '#F3E8D8',
+    backgroundSelected: '#E7D2AE',
+    accent: '#C1693F',
+    accentText: '#FFF8EF',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F2E6D3',
+    textSecondary: '#B8A48C',
+    background: '#211812',
+    backgroundElement: '#2E221A',
+    backgroundSelected: '#46341F',
+    accent: '#E0895A',
+    accentText: '#241A14',
   },
 } as const;
 
@@ -59,6 +64,14 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radius = {
+  small: 8,
+  medium: 12,
+  large: 16,
+  xlarge: 20,
+  pill: 999,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

@@ -6,7 +6,7 @@ import { PrimaryButton } from '@/components/primary-button';
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import type { Testimonial } from '@/types/database';
 
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: Radius.large,
     padding: Spacing.three,
     gap: Spacing.two,
   },

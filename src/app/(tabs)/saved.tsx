@@ -4,7 +4,7 @@ import { Alert, FlatList, Linking, Pressable, StyleSheet, View } from 'react-nat
 import { ScreenContainer } from '@/components/screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteSavedItem, listSavedItems } from '@/lib/saved-items';
@@ -59,10 +59,12 @@ export default function SavedScreen() {
               onPress={() => setFilter(item.key)}
               style={[
                 styles.tab,
-                { borderColor: theme.backgroundSelected },
-                isActive && { backgroundColor: theme.backgroundSelected },
+                { borderColor: isActive ? theme.accent : theme.backgroundSelected },
+                isActive && { backgroundColor: theme.accent },
               ]}>
-              <ThemedText type="small">{item.label}</ThemedText>
+              <ThemedText type="small" themeColor={isActive ? 'accentText' : 'text'}>
+                {item.label}
+              </ThemedText>
             </Pressable>
           );
         })}
@@ -86,7 +88,9 @@ export default function SavedScreen() {
                 </ThemedText>
               </Pressable>
               <Pressable onPress={() => handleDelete(item)}>
-                <ThemedText type="link">삭제</ThemedText>
+                <ThemedText type="link" themeColor="textSecondary">
+                  삭제
+                </ThemedText>
               </Pressable>
             </ThemedView>
           )}
@@ -103,7 +107,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     borderWidth: 1,
-    borderRadius: 999,
+    borderRadius: Radius.pill,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
   },
@@ -112,7 +116,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: Radius.large,
     padding: Spacing.three,
     gap: Spacing.one,
     flexDirection: 'row',

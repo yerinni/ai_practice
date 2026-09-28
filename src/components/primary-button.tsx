@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export function PrimaryButton({
   label,
@@ -14,12 +15,19 @@ export function PrimaryButton({
   variant?: 'solid' | 'outline';
   disabled?: boolean;
 }) {
+  const theme = useTheme();
+  const isSolid = variant === 'solid';
+
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[styles.button, variant === 'outline' && styles.outline, disabled && styles.disabled]}>
-      <ThemedText type="smallBold" themeColor={variant === 'solid' ? undefined : 'text'} style={variant === 'solid' && styles.solidLabel}>
+      style={[
+        styles.button,
+        isSolid ? { backgroundColor: theme.accent } : { borderWidth: 1.5, borderColor: theme.accent },
+        disabled && styles.disabled,
+      ]}>
+      <ThemedText type="smallBold" themeColor={isSolid ? 'accentText' : 'accent'}>
         {label}
       </ThemedText>
     </Pressable>
@@ -28,20 +36,11 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#3c87f7',
-    borderRadius: 12,
+    borderRadius: Radius.medium,
     paddingVertical: Spacing.three,
     alignItems: 'center',
   },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#3c87f7',
-  },
   disabled: {
     opacity: 0.5,
-  },
-  solidLabel: {
-    color: '#ffffff',
   },
 });
