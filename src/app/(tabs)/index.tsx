@@ -34,6 +34,7 @@ export default function HomeScreen() {
 
   const [tripId, setTripId] = useState<string | null>(null);
   const [tripMoodPreferences, setTripMoodPreferences] = useState<string[]>([]);
+  const [tripMusicGenres, setTripMusicGenres] = useState<string[]>([]);
   const [tripLoaded, setTripLoaded] = useState(false);
 
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null);
@@ -45,6 +46,7 @@ export default function HomeScreen() {
     getActiveTrip(session.user.id).then((trip) => {
       setTripId(trip?.id ?? null);
       setTripMoodPreferences(trip?.mood_preferences ?? []);
+      setTripMusicGenres(trip?.music_genres ?? []);
       setTripLoaded(true);
     });
   }, [session]);
@@ -57,7 +59,7 @@ export default function HomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, tripLoaded, location.status]);
 
-  const loadRecommendations = async (excludeMoods: string[] = []) => {
+  const loadRecommendations = async () => {
     if (!session) return;
     setLoading(true);
     try {
@@ -66,8 +68,12 @@ export default function HomeScreen() {
       const coords = location.status === 'granted' ? location.coords : null;
 
       const next = await Promise.all(
-        moods.map(async (mood) => {
-          const track = await fetchMoodTrack(mood);
+        moods.map(async (mood, index) => {
+          // Cycle through the traveler's chosen genres (trip-setup.tsx) so
+          // each of the 3 cards reflects a genre they actually picked,
+          // instead of ignoring music_genres entirely.
+          const genre = tripMusicGenres.length > 0 ? tripMusicGenres[index % tripMusicGenres.length] : undefined;
+          const track = await fetchMoodTrack(mood, genre);
           const recommendationId = await insertMoodRecommendation({
             userId: session.user.id,
             tripId,

@@ -13,9 +13,9 @@ export interface MoodTrack {
 // search endpoint doesn't require an API key, unlike Spotify (which now
 // requires the developer account to have an active Premium subscription
 // just to call the Web API).
-export async function fetchMoodTrack(mood: string): Promise<MoodTrack> {
+export async function fetchMoodTrack(mood: string, genre?: string): Promise<MoodTrack> {
   const { data, error } = await supabase.functions.invoke<MoodTrack>('mood-track', {
-    body: { mood },
+    body: { mood, genre },
   });
   if (error) throw error;
   if (!data) throw new Error('음악 추천을 받지 못했어요.');

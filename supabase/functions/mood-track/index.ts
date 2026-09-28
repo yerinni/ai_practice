@@ -6,7 +6,8 @@
 // plain search under Client Credentials — see git history for the
 // spotify-mood-playlist function this replaces).
 //
-// F3/F4: given a mood tag, returns one track.
+// F3/F4: given a mood tag (and optionally a music genre from trip-setup),
+// returns one track.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,13 +25,27 @@ const MOOD_SEARCH_TERMS: Record<string, string> = {
   경쾌한: 'feel good cheerful',
 };
 
+// Korean genre chips (src/app/(onboarding)/trip-setup.tsx GENRE_OPTIONS) ->
+// English search keywords. Deezer's public /search endpoint has no genre
+// filter param — this is a free-text keyword added to the query, which
+// biases results toward that genre without guaranteeing every result
+// matches it exactly.
+const GENRE_SEARCH_TERMS: Record<string, string> = {
+  인디: 'indie',
+  팝: 'pop',
+  재즈: 'jazz',
+  로파이: 'lofi',
+  'K-POP': 'k-pop',
+  어쿠스틱: 'acoustic',
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { mood } = await req.json();
+    const { mood, genre } = await req.json();
     if (typeof mood !== 'string' || !mood) {
       return new Response(JSON.stringify({ error: 'mood is required' }), {
         status: 400,
@@ -38,7 +53,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const query = MOOD_SEARCH_TERMS[mood] ?? mood;
+    const moodTerm = MOOD_SEARCH_TERMS[mood] ?? mood;
+    const genreTerm = typeof genre === 'string' ? (GENRE_SEARCH_TERMS[genre] ?? genre) : null;
+    const query = [genreTerm, moodTerm].filter(Boolean).join(' ');
+
     const searchUrl = new URL('https://api.deezer.com/search');
     searchUrl.searchParams.set('q', query);
     searchUrl.searchParams.set('limit', '25');
