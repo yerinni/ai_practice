@@ -8,11 +8,15 @@ export function getTimeOfDay(date: Date = new Date()): TimeOfDay {
   return 'night';
 }
 
+// All 5 mood tags, ordered by how well they fit each time of day (best
+// fit first). Keeping every mood in every pool — just reordered — means
+// picking several distinct cards for one time slot (see pickMoodTags)
+// doesn't run out of options.
 const MOOD_POOL_BY_TIME: Record<TimeOfDay, string[]> = {
-  morning: ['경쾌한', '신나는'],
-  afternoon: ['신나는', '경쾌한'],
-  evening: ['차분한', '센치한'],
-  night: ['몽환적인', '센치한'],
+  morning: ['경쾌한', '신나는', '차분한', '센치한', '몽환적인'],
+  afternoon: ['신나는', '경쾌한', '차분한', '몽환적인', '센치한'],
+  evening: ['차분한', '센치한', '몽환적인', '경쾌한', '신나는'],
+  night: ['몽환적인', '센치한', '차분한', '신나는', '경쾌한'],
 };
 
 const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
@@ -28,15 +32,33 @@ export function timeOfDayLabel(timeOfDay: TimeOfDay): string {
 
 // F3/F4: picks a mood tag without asking the user anything. Prefers the
 // traveler's own mood_preferences (from trip-setup) where they overlap with
-// what fits the current time of day, falls back to the time-of-day pool,
-// and finally to whatever mood_preferences they picked. `exclude` is used by
-// "다른 느낌으로" so it doesn't just re-suggest the same mood.
-export function pickMoodTag(options: { timeOfDay: TimeOfDay; tripMoodPreferences: string[]; exclude?: string }): string {
-  const { timeOfDay, tripMoodPreferences, exclude } = options;
+// what fits the current time of day, otherwise uses the time-of-day pool.
+// `exclude` keeps repeats out — used both by "다른 느낌으로" and by
+// pickMoodTags to get several distinct cards at once.
+export function pickMoodTag(options: {
+  timeOfDay: TimeOfDay;
+  tripMoodPreferences: string[];
+  exclude?: string[];
+}): string {
+  const { timeOfDay, tripMoodPreferences, exclude = [] } = options;
   const timePool = MOOD_POOL_BY_TIME[timeOfDay];
-  const overlap = tripMoodPreferences.filter((mood) => timePool.includes(mood));
-  const base = overlap.length > 0 ? overlap : timePool.length > 0 ? timePool : tripMoodPreferences;
-  const candidates = base.filter((mood) => mood !== exclude);
-  const pool = candidates.length > 0 ? candidates : base.length > 0 ? base : timePool;
-  return pool[Math.floor(Math.random() * pool.length)] ?? '차분한';
+  const overlap = timePool.filter((mood) => tripMoodPreferences.includes(mood));
+  const preferred = overlap.length > 0 ? overlap : timePool;
+
+  const preferredCandidates = preferred.filter((mood) => !exclude.includes(mood));
+  const timePoolCandidates = timePool.filter((mood) => !exclude.includes(mood));
+  const pool = preferredCandidates.length > 0 ? preferredCandidates : timePoolCandidates.length > 0 ? timePoolCandidates : timePool;
+
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// Picks `count` mood tags for showing several recommendation cards at once,
+// each excluding the ones already picked so they don't repeat until the
+// pool (5 moods) is exhausted.
+export function pickMoodTags(options: { timeOfDay: TimeOfDay; tripMoodPreferences: string[] }, count: number): string[] {
+  const picked: string[] = [];
+  for (let i = 0; i < count; i++) {
+    picked.push(pickMoodTag({ ...options, exclude: picked }));
+  }
+  return picked;
 }
