@@ -23,6 +23,9 @@ const MOOD_SEARCH_TERMS: Record<string, string> = {
   몽환적인: 'dreamy ambient',
   센치한: 'melancholy sentimental',
   경쾌한: 'feel good cheerful',
+  로맨틱한: 'romantic love',
+  웅장한: 'epic cinematic',
+  편안한: 'relaxing peaceful',
 };
 
 // Korean genre chips (src/app/(onboarding)/trip-setup.tsx GENRE_OPTIONS) ->
@@ -37,6 +40,8 @@ const GENRE_SEARCH_TERMS: Record<string, string> = {
   로파이: 'lofi',
   'K-POP': 'k-pop',
   어쿠스틱: 'acoustic',
+  힙합: 'hip hop',
+  클래식: 'classical',
 };
 
 Deno.serve(async (req) => {

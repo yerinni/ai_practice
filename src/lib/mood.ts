@@ -8,15 +8,15 @@ export function getTimeOfDay(date: Date = new Date()): TimeOfDay {
   return 'night';
 }
 
-// All 5 mood tags, ordered by how well they fit each time of day (best
-// fit first). Keeping every mood in every pool — just reordered — means
-// picking several distinct cards for one time slot (see pickMoodTags)
-// doesn't run out of options.
+// All 8 mood tags (src/constants/music-taste.ts MOOD_OPTIONS), ordered by
+// how well they fit each time of day (best fit first). Keeping every mood
+// in every pool — just reordered — means picking several distinct cards
+// for one time slot (see pickMoodTags) doesn't run out of options.
 const MOOD_POOL_BY_TIME: Record<TimeOfDay, string[]> = {
-  morning: ['경쾌한', '신나는', '차분한', '센치한', '몽환적인'],
-  afternoon: ['신나는', '경쾌한', '차분한', '몽환적인', '센치한'],
-  evening: ['차분한', '센치한', '몽환적인', '경쾌한', '신나는'],
-  night: ['몽환적인', '센치한', '차분한', '신나는', '경쾌한'],
+  morning: ['경쾌한', '신나는', '편안한', '로맨틱한', '차분한', '웅장한', '센치한', '몽환적인'],
+  afternoon: ['신나는', '경쾌한', '웅장한', '로맨틱한', '차분한', '편안한', '몽환적인', '센치한'],
+  evening: ['차분한', '센치한', '로맨틱한', '편안한', '몽환적인', '웅장한', '경쾌한', '신나는'],
+  night: ['몽환적인', '센치한', '편안한', '로맨틱한', '차분한', '웅장한', '신나는', '경쾌한'],
 };
 
 const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
@@ -54,7 +54,7 @@ export function pickMoodTag(options: {
 
 // Picks `count` mood tags for showing several recommendation cards at once,
 // each excluding the ones already picked so they don't repeat until the
-// pool (5 moods) is exhausted.
+// pool (8 moods) is exhausted.
 export function pickMoodTags(options: { timeOfDay: TimeOfDay; tripMoodPreferences: string[] }, count: number): string[] {
   const picked: string[] = [];
   for (let i = 0; i < count; i++) {
