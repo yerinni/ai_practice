@@ -10,7 +10,9 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.accent,
+        // Not accent: Snapchat only puts its yellow on filled buttons/badges
+        // or on a dark canvas — #FFFC00 on a white tab bar barely reads.
+        tabBarActiveTintColor: theme.text,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: { backgroundColor: theme.background },
       }}>

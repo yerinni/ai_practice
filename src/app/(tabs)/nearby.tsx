@@ -117,7 +117,7 @@ export default function NearbyScreen() {
                   {[distance, item.address, item.rating ? `★ ${item.rating}` : null].filter(Boolean).join(' · ')}
                 </ThemedText>
                 <Pressable onPress={() => handleSave(item)} disabled={isSaved}>
-                  <ThemedText type="link" themeColor={isSaved ? 'textSecondary' : 'accent'}>
+                  <ThemedText type="linkPrimary" themeColor={isSaved ? 'textSecondary' : 'text'}>
                     {isSaved ? '저장됨' : '저장하기'}
                   </ThemedText>
                 </Pressable>
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   card: {
-    borderRadius: Radius.large,
+    borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.one,
   },

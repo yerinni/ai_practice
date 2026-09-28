@@ -10,12 +10,11 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
-  const resolvedColor = themeColor ?? (type === 'linkPrimary' ? 'accent' : 'text');
 
   return (
     <Text
       style={[
-        { color: theme[resolvedColor] },
+        { color: theme[themeColor ?? 'text'] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
         type === 'small' && styles.small,
@@ -33,40 +32,48 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   small: {
+    fontFamily: Fonts.brandMedium,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: 500,
   },
   smallBold: {
+    fontFamily: Fonts.brand,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: 700,
   },
   default: {
+    fontFamily: Fonts.brandMedium,
     fontSize: 16,
     lineHeight: 24,
     fontWeight: 500,
   },
   title: {
-    fontFamily: Fonts.rounded,
-    fontSize: 40,
+    fontFamily: Fonts.brand,
+    fontSize: 28,
     fontWeight: 700,
-    lineHeight: 46,
+    lineHeight: 34,
   },
   subtitle: {
-    fontFamily: Fonts.rounded,
-    fontSize: 26,
-    lineHeight: 34,
+    fontFamily: Fonts.brand,
+    fontSize: 20,
+    lineHeight: 28,
     fontWeight: 700,
   },
   link: {
+    fontFamily: Fonts.brandMedium,
     lineHeight: 30,
     fontSize: 14,
   },
+  // Bold + underline rather than a color, on purpose: the brand yellow
+  // reads as a fill color, not a text color — see docs/design-system.md.
   linkPrimary: {
+    fontFamily: Fonts.brand,
     lineHeight: 30,
     fontSize: 14,
     fontWeight: 700,
+    textDecorationLine: 'underline',
   },
   code: {
     fontFamily: Fonts.mono,

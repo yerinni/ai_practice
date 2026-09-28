@@ -8,24 +8,27 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+// Snapchat-inspired: signature yellow as the single brand/action color,
+// used only as a filled background (never as text/icon color on a light
+// surface — #FFFC00 on white has too little contrast to read).
 export const Colors = {
   light: {
-    text: '#3A2B1E',
-    textSecondary: '#8A7360',
-    background: '#FBF5EC',
-    backgroundElement: '#F3E8D8',
-    backgroundSelected: '#E7D2AE',
-    accent: '#C1693F',
-    accentText: '#FFF8EF',
+    text: '#121314',
+    textSecondary: '#53575B',
+    background: '#FFFFFF',
+    backgroundElement: '#F0F1F2',
+    backgroundSelected: '#E4E5E7',
+    accent: '#FFFC00',
+    accentText: '#000000',
   },
   dark: {
-    text: '#F2E6D3',
-    textSecondary: '#B8A48C',
-    background: '#211812',
-    backgroundElement: '#2E221A',
-    backgroundSelected: '#46341F',
-    accent: '#E0895A',
-    accentText: '#241A14',
+    text: '#FFFFFF',
+    textSecondary: '#C7C7CC',
+    background: '#121314',
+    backgroundElement: '#3A3E41',
+    backgroundSelected: '#4C5155',
+    accent: '#FFFC00',
+    accentText: '#000000',
   },
 } as const;
 
@@ -41,18 +44,25 @@ export const Fonts = Platform.select({
     rounded: 'ui-rounded',
     /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
+    /** Avenir Next ships as a built-in iOS font. No equivalent on Android/web. */
+    brand: 'AvenirNext-DemiBold',
+    brandMedium: 'AvenirNext-Medium',
   },
   default: {
     sans: 'normal',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
+    brand: 'normal',
+    brandMedium: 'normal',
   },
   web: {
     sans: 'var(--font-display)',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
+    brand: "'Avenir Next', Helvetica, Arial, sans-serif",
+    brandMedium: "'Avenir Next', Helvetica, Arial, sans-serif",
   },
 });
 
@@ -66,12 +76,13 @@ export const Spacing = {
   six: 64,
 } as const;
 
+// Named after usage (not size) since Snapchat's own scale mixes both —
+// see docs/design-system.md for which reference value each maps to.
 export const Radius = {
-  small: 8,
-  medium: 12,
-  large: 16,
-  xlarge: 20,
-  pill: 999,
+  input: 5,
+  card: 8,
+  button: 64,
+  pill: 9999,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

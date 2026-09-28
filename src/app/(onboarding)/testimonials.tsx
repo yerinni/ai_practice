@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   card: {
-    borderRadius: Radius.large,
+    borderRadius: Radius.card,
     padding: Spacing.three,
     gap: Spacing.two,
   },

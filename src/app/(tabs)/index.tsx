@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.three,
   },
   card: {
-    borderRadius: Radius.xlarge,
+    borderRadius: Radius.card,
     padding: Spacing.four,
     gap: Spacing.three,
   },
