@@ -28,11 +28,25 @@ const MOOD_SEARCH_TERMS: Record<string, string> = {
   편안한: 'relaxing peaceful',
 };
 
-// Korean genre chips (src/app/(onboarding)/trip-setup.tsx GENRE_OPTIONS) ->
-// English search keywords. Deezer's public /search endpoint has no genre
-// filter param — this is a free-text keyword added to the query, which
-// biases results toward that genre without guaranteeing every result
-// matches it exactly.
+// Korean genre chips (src/constants/music-taste.ts GENRE_OPTIONS) -> Deezer
+// genre chart IDs (confirmed against a live GET https://api.deezer.com/genre
+// response: Pop=132, Rap/Hip Hop=116, Jazz=129, Classical=98). Deezer's
+// /chart/{id}/tracks returns real genre-tagged top tracks — far more
+// accurate than keyword search. 인디/로파이/어쿠스틱/K-POP have no
+// corresponding entry in Deezer's genre taxonomy at all (it only has broad
+// buckets like "Asian Music"), so those fall through to free-text search
+// below instead.
+const GENRE_CHART_IDS: Record<string, number> = {
+  팝: 132,
+  힙합: 116,
+  재즈: 129,
+  클래식: 98,
+};
+
+// Fallback free-text keywords for genres with no Deezer chart id (and as a
+// safety net if a chart lookup above fails). Deezer's public /search
+// endpoint has no genre filter param, so this only biases results toward
+// the genre without guaranteeing every result matches it.
 const GENRE_SEARCH_TERMS: Record<string, string> = {
   인디: 'indie',
   팝: 'pop',
@@ -53,19 +67,30 @@ interface DeezerTrack {
   album?: { cover_medium?: string };
 }
 
-async function searchDeezer(query: string): Promise<DeezerTrack[]> {
-  const searchUrl = new URL('https://api.deezer.com/search');
-  searchUrl.searchParams.set('q', query);
-  searchUrl.searchParams.set('limit', '25');
-
-  const response = await fetch(searchUrl);
+async function fetchDeezerJson(url: URL): Promise<any> {
+  const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Deezer search failed: ${response.status}`);
+    throw new Error(`Deezer request failed: ${response.status}`);
   }
   const data = await response.json();
   if (data.error) {
     throw new Error(`Deezer error: ${data.error.message ?? data.error.type}`);
   }
+  return data;
+}
+
+async function searchDeezer(query: string): Promise<DeezerTrack[]> {
+  const url = new URL('https://api.deezer.com/search');
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', '25');
+  const data = await fetchDeezerJson(url);
+  return ((data.data ?? []) as unknown[]).filter(Boolean) as DeezerTrack[];
+}
+
+async function fetchGenreChartTracks(genreId: number): Promise<DeezerTrack[]> {
+  const url = new URL(`https://api.deezer.com/chart/${genreId}/tracks`);
+  url.searchParams.set('limit', '25');
+  const data = await fetchDeezerJson(url);
   return ((data.data ?? []) as unknown[]).filter(Boolean) as DeezerTrack[];
 }
 
@@ -84,13 +109,25 @@ Deno.serve(async (req) => {
     }
 
     const moodTerm = MOOD_SEARCH_TERMS[mood] ?? mood;
+    const genreChartId = typeof genre === 'string' ? GENRE_CHART_IDS[genre] : undefined;
     const genreTerm = typeof genre === 'string' ? (GENRE_SEARCH_TERMS[genre] ?? genre) : null;
 
-    // A genre+mood combo (e.g. "classical" + "epic cinematic") can come up
-    // empty even though each term alone has plenty of results, since this
-    // is free-text search, not faceted filtering. Fall back to mood-only
-    // rather than failing the whole card.
-    let items = await searchDeezer([genreTerm, moodTerm].filter(Boolean).join(' '));
+    let items: DeezerTrack[] = [];
+
+    if (genreChartId) {
+      try {
+        items = await fetchGenreChartTracks(genreChartId);
+      } catch {
+        items = [];
+      }
+    }
+
+    if (items.length === 0) {
+      // No genre, a genre Deezer doesn't have a chart for, or the chart
+      // call failed/came up empty — fall back to free-text search.
+      items = await searchDeezer([genreTerm, moodTerm].filter(Boolean).join(' '));
+    }
+
     if (items.length === 0 && genreTerm) {
       items = await searchDeezer(moodTerm);
     }
